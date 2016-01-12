@@ -48,7 +48,7 @@
       }
     });
 
-    init();
+    ctrl.init = init;
 
     ///////////////
 
@@ -65,6 +65,9 @@
       ctrl.nodesSrc.forEach(function (node) {
         node.id = node.uuid;
         retrievePorts(node);
+        if (node['target_power_state']) {
+          actions.updateNode(node);
+        }
       });
     }
 

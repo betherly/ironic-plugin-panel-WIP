@@ -1,4 +1,5 @@
 <table ng-controller="IronicNodeListController as table"
+       ng-init="table.init()"
        hz-table ng-cloak
        st-table="table.nodes"
        st-safe-src="table.nodesSrc"
@@ -90,11 +91,15 @@
         </a>
       </td>
       <td class="rsp-p1">
-        <a href="{$ node.uuid $}">
+        <a href="/admin/instances/{$ node.instance_uuid $}/detail">
           {$ node.instance_uuid $}
         </a>
       </td>
-      <td class="rsp-p2" ng-class="{'running': node['target_power_state']}">{$ node.power_state $}</td>
+      <td class="rsp-p2" >
+        <div ng-class="{'running': node['target_power_state']}">
+          {$ node.power_state $}
+        </div>
+      </td>
       <td class="rsp-p2">{$ node.provision_state $}</td>
       <td class="rsp-p2">{$ node.maintenance $}</td>
       <td class="rsp-p2">{$ node.ports.length $}</td>
@@ -133,5 +138,11 @@
       </td>
     </tr>
   </tbody>
-  <tfoot hz-table-footer items="table.nodes"></tfoot>
+  <tfoot hz-table-footer items="table.nodes">
+    <tr>
+      <td colspan="100" translate>
+        Displaying {$ table.nodes.length $} items
+      </td>
+    </tr>
+  </tfoot>
 </table>

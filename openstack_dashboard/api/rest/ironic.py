@@ -12,8 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""API over the ironic service.
-"""
 
 from django.views import generic
 
@@ -24,27 +22,21 @@ from openstack_dashboard.api.rest import utils as rest_utils
 
 @urls.register
 class Nodes(generic.View):
-    """API for ironic nodes.
-    """
 
     url_regex = r'ironic/nodes/$'
 
     @rest_utils.ajax()
     def get(self, request):
         """Retrieve a list of nodes.
-
-        The listing result is an object with property "items".
         """
-        result = api.ironic.node_list(request)
+        items = api.ironic.node_list(request)
         return {
-            'items': [i.to_dict() for i in result],
+            'items': [i.to_dict() for i in items],
         }
 
 
 @urls.register
 class Node(generic.View):
-    """API for ironic node.
-    """
 
     url_regex = r'ironic/nodes/(?P<node_id>[0-9a-f-]+)$'
 
@@ -57,8 +49,6 @@ class Node(generic.View):
 
 @urls.register
 class Ports(generic.View):
-    """API for ironic ports.
-    """
 
     url_regex = r'ironic/ports/$'
 
@@ -67,16 +57,14 @@ class Ports(generic.View):
         """Get a list of ports associated with a given node.
         """
         node_id = request.GET.get('node_id')
-        result = api.ironic.node_list_ports(request, node_id)
+        items = api.ironic.node_list_ports(request, node_id)
         return {
-            'items': [i.to_dict() for i in result],
+            'items': [i.to_dict() for i in items],
         }
 
 
 @urls.register
 class StatesPower(generic.View):
-    """API for power state of a node.
-    """
 
     url_regex = r'ironic/nodes/(?P<node_id>[0-9a-f-]+)/states/power$'
 
@@ -90,14 +78,14 @@ class StatesPower(generic.View):
 
 @urls.register
 class Maintenance(generic.View):
-    """API for maintenance state of a node.
-    """
 
     url_regex = r'ironic/nodes/(?P<node_id>[0-9a-f-]+)/maintenance$'
 
     @rest_utils.ajax()
     def patch(self, request, node_id):
-        return api.ironic.node_set_maintenance(request, node_id, 'on')
+        maint_reason = request.DATA.get('maint_reason')
+        return api.ironic.node_set_maintenance(request, node_id, 'on',
+                                               maint_reason=maint_reason)
 
     @rest_utils.ajax()
     def delete(self, request, node_id):
