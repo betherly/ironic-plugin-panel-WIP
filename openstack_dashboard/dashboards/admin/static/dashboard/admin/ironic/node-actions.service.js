@@ -1,5 +1,5 @@
 /*
- * © Copyright 2015 Hewlett Packard Enterprise Development Company LP
+ * Copyright 2015 Hewlett Packard Enterprise Development Company LP
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,19 +24,25 @@
       .factory('horizon.dashboard.admin.ironic.actions', actions);
 
   actions.$inject = [
-    'horizon.app.core.openstack-service-api.ironic'
+    'horizon.app.core.openstack-service-api.ironic',
+    'horizon.framework.long-running.service',
+    'horizon.framework.widgets.modal.prompt'
   ];
 
-  function actions(ironic) {
+  function actions(ironic, longRunning, prompt) {
     var service = {
       powerOn: powerOn,
       powerOff: powerOff,
       powerOnAll: powerOnAll,
       powerOffAll: powerOffAll,
-      putNodeInMaintenanceMode: putNodeInMaintenanceMode,
+      promptForPutNodeInMaintenanceMode: promptForPutNodeInMaintenanceMode,
+      putNodeInMaintenanceMode: putNodeInMaintenanceMode, // expose for testing
       removeNodeFromMaintenanceMode: removeNodeFromMaintenanceMode,
-      putAllInMaintenanceMode: putAllInMaintenanceMode,
-      removeAllFromMaintenanceMode: removeAllFromMaintenanceMode
+      promptForPutAllInMaintenanceMode: promptForPutAllInMaintenanceMode,
+      putAllInMaintenanceMode: putAllInMaintenanceMode, // expose for testing
+      removeAllFromMaintenanceMode: removeAllFromMaintenanceMode,
+      updateNode: updateNode,
+      operateAll: operateAll // expose for testing
     };
 
     return service;
@@ -49,7 +55,9 @@
       }
       node.power_state = null;
       node.target_power_state = POWER_STATE_ON;
-      return ironic.powerOnNode(node.uuid);
+      ironic.powerOnNode(node.uuid).then(function () {
+        updateNode(node);
+      });
     }
 
     function powerOff(node) {
@@ -58,27 +66,60 @@
       }
       node.power_state = null;
       node.target_power_state = POWER_STATE_OFF;
-      return ironic.powerOffNode(node.uuid);
+      ironic.powerOffNode(node.uuid).then(function () {
+        updateNode(node);
+      });
+    }
+
+    function updateNode(node) {
+      longRunning(function () {
+        return ironic.getNode(node.uuid);
+      }, 3000)
+      .until(function (response) {
+        return response.data.target_power_state === null;
+      })
+      .then(
+        function (response) {
+          node.power_state = response.data.power_state;
+          node.target_power_state = null;
+        }
+      );
     }
 
     function powerOnAll(selected) {
-      operateAll(powerOn, selected);
+      service.operateAll(service.powerOn, selected);
     }
 
     function powerOffAll(selected) {
-      operateAll(powerOff, selected);
+      service.operateAll(service.powerOff, selected);
     }
 
     // maintenance
 
-    function putNodeInMaintenanceMode(node) {
+    function promptForPutNodeInMaintenanceMode(node) {
+      prompt({
+        text: {
+          title: gettext('(Optional) Why is this node under maintenance?'),
+          submit: gettext('Submit'),
+          cancel: gettext('Cancel'),
+          placeholder: gettext('Maintenance reason')
+        },
+        maxlength: 256
+      },
+      function (reason) {
+        putNodeInMaintenanceMode(node, reason);
+      });
+    }
+
+    function putNodeInMaintenanceMode(node, reason) {
       if (node.maintenance !== false) {
         return;
       }
       node.maintenance = null;
-      ironic.putNodeInMaintenanceMode(node.uuid).then(
+      ironic.putNodeInMaintenanceMode(node.uuid, reason).then(
         function () {
           node.maintenance = true;
+          node.maintenance_reason = reason;
         }
       );
     }
@@ -91,16 +132,34 @@
       ironic.removeNodeFromMaintenanceMode(node.uuid).then(
         function () {
           node.maintenance = false;
+          node.maintenance_reason = null;
         }
       );
     }
 
-    function putAllInMaintenanceMode(selected) {
-      operateAll(putNodeInMaintenanceMode, selected);
+    function promptForPutAllInMaintenanceMode(selected) {
+      prompt({
+        text: {
+          title: gettext('(Optional) Why are these nodes under maintenance?'),
+          submit: gettext('Submit'),
+          cancel: gettext('Cancel'),
+          placeholder: gettext('Maintenance reason')
+        },
+        maxlength: 256
+      },
+      function (reason) {
+        putAllInMaintenanceMode(selected, reason);
+      });
+    }
+
+    function putAllInMaintenanceMode(selected, reason) {
+      service.operateAll(function (node) {
+        service.putNodeInMaintenanceMode(node, reason);
+      }, selected);
     }
 
     function removeAllFromMaintenanceMode(selected) {
-      operateAll(removeNodeFromMaintenanceMode, selected);
+      service.operateAll(service.removeNodeFromMaintenanceMode, selected);
     }
 
     function operateAll(fn, selected) {
