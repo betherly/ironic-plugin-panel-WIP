@@ -1,0 +1,15 @@
+.navbar {
+  margin-bottom: 0;
+  border-top: none;
+  border-right: none;
+  border-left: none;
+
+  .navbar-toggle {
+    border-color: transparent;
+  }
+
+  // Pushes the menu slightly down from the navbar
+  li > .dropdown-menu {
+    margin-top: 2px;
+  }
+}
