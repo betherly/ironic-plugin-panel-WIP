@@ -57,6 +57,7 @@
      */
 
     function getNodes() {
+      console.log("openstack_dashbord/static/app/core/openstack-service-api/ironic-service.js:getNodes")
       return apiService.get('/api/ironic/nodes/')
         .error(function() {
           toastService.add('error', gettext('Unable to retrieve Ironic nodes.'));
@@ -107,8 +108,11 @@
      * @param {string} uuid – UUID or logical name of a node.
      */
 
-    function putNodeInMaintenanceMode(uuid) {
-      return apiService.patch('/api/ironic/nodes/' + uuid + '/maintenance').error(function() {
+    function putNodeInMaintenanceMode(uuid, reason) {
+      var data = {
+        maint_reason: reason
+      };
+      return apiService.patch('/api/ironic/nodes/' + uuid + '/maintenance', data).error(function() {
         toastService.add('error',
             gettext('Unable to put the Ironic node in maintenance mode.'));
       });

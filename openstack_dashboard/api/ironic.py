@@ -26,6 +26,7 @@ from openstack_dashboard.api import base
 LOG = logging.getLogger(__name__)
 
 
+DEFAULT_IRONIC_API_VERSION = '1.6'
 DEFAULT_INSECURE = False
 DEFAULT_CACERT = None
 
@@ -40,7 +41,9 @@ def ironicclient(request):
     cacert = getattr(settings, 'OPENSTACK_SSL_CACERT', DEFAULT_CACERT)
     ironic_url = base.url_for(request, IRONIC_CLIENT_CLASS_NAME)
 
-    return client.Client(1, ironic_url,
+    return client.Client(1,
+                         ironic_url,
+                         os_ironic_api_version=DEFAULT_IRONIC_API_VERSION,
                          project_id=request.user.project_id,
                          token=request.user.token.id,
                          insecure=insecure,
@@ -96,7 +99,7 @@ def node_set_power_state(request, node_id, state):
     return ironicclient(request).node.set_power_state(node_id, state)
 
 
-def node_set_maintenance(request, node_id, state):
+def node_set_maintenance(request, node_id, state, maint_reason=None):
     """Set the maintenance mode on a given node.
 
     :param request: HTTP request.
@@ -106,4 +109,6 @@ def node_set_maintenance(request, node_id, state):
 
     http://docs.openstack.org/developer/python-ironicclient/api/ironicclient.v1.node.html#ironicclient.v1.node.NodeManager.set_maintenance
     """
-    return ironicclient(request).node.set_maintenance(node_id, state)
+    return ironicclient(request).node.set_maintenance(node_id,
+                                                      state,
+                                                      maint_reason=maint_reason)
