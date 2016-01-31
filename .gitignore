@@ -2,4 +2,6 @@
 *.pyc
 static/dashboard/js/*.js
 static/dashboard/css/*.css
-openstack_dashboard/local/.secret_key_store
+*~
+.secret_key_store
+*.secret_key_store.lock
