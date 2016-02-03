@@ -1,0 +1,30 @@
+<div class="modal-header">
+  <h3 class="modal-title">
+    {$ ::context.text.title $}
+  </h3>
+</div>
+<div class="modal-body clearfix">
+  <form name="promptForm">
+    <input class="form-control"
+           maxlength="{$ ::context.maxlength $}"
+           minlength="{$ ::context.minlength $}"
+           ng-model="input"
+           ng-pattern="{$ ::context.pattern $}"
+           ng-required="{$ ::context.required $}"
+           placeholder="{$ ::context.text.placeholder $}"
+           type="{$ ::context.type || 'text' $}">
+  </form>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-default secondary"
+          type="button"
+          ng-click="cancel()">
+    {$ ::context.text.cancel $}
+  </button>
+  <button class="btn btn-primary"
+          type="button"
+          ng-click="submit(input)"
+          ng-disabled="promptForm.$invalid">
+    {$ ::context.text.submit $}
+  </button>
+</div>

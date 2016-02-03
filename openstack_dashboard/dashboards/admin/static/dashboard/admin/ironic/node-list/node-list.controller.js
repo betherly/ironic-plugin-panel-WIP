@@ -48,7 +48,7 @@
       }
     });
 
-    init();
+    ctrl.init = init;
 
     ///////////////
 
@@ -57,14 +57,19 @@
     }
 
     function retrieveNodes() {
+      console.log("node-list.controller: Get nodes")
       return ironic.getNodes().then(onGetNotes);
     }
 
     function onGetNotes(response) {
+      console.log("node-list.controller: onGetNodes")
       $scope.nodes = ctrl.nodesSrc = response.data.items;
       ctrl.nodesSrc.forEach(function (node) {
         node.id = node.uuid;
         retrievePorts(node);
+        if (node['target_power_state']) {
+          actions.updateNode(node);
+        }
       });
     }
 
